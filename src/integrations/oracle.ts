@@ -30,6 +30,11 @@ export interface OracleResult {
   error?: string;
 }
 
+export interface OracleHealth {
+  available: boolean;
+  message: string;
+}
+
 // Environment variables required for Oracle browser automation
 const ORACLE_ENV = {
   ...process.env,
@@ -60,6 +65,35 @@ export async function getOracleVersion(): Promise<string | null> {
     return stdout.trim();
   } catch {
     return null;
+  }
+}
+
+/**
+ * Pre-flight check: can Oracle actually reach GPT?
+ * Sends a tiny prompt to verify the session is alive.
+ */
+export async function checkOracleSession(): Promise<OracleHealth> {
+  if (!(await isOracleAvailable())) {
+    return { available: false, message: 'Oracle CLI not installed' };
+  }
+
+  try {
+    const result = await executeOracle({
+      prompt: 'Reply with only the word READY',
+      timeout: 30000, // 30s is enough for a health check
+    });
+
+    if (result.success && result.output.includes('READY')) {
+      return { available: true, message: 'Oracle session active' };
+    }
+
+    if (result.error?.includes('ECONNREFUSED')) {
+      return { available: false, message: 'Chrome not running — restart X11 stack or run oracle-login' };
+    }
+
+    return { available: false, message: result.error || 'Oracle returned unexpected output' };
+  } catch {
+    return { available: false, message: 'Oracle pre-flight failed' };
   }
 }
 
