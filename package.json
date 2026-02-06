@@ -1,7 +1,7 @@
 {
   "name": "auracoil",
-  "version": "0.1.0",
-  "description": "Coding quality amplifier using GPT 5.2 Pro via Oracle to generate enhanced documentation",
+  "version": "0.2.0",
+  "description": "GPT 5.2 Pro reviewer for AGENTS.md — accretive cross-AI documentation enhancement via Oracle",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
