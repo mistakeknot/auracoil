@@ -1,75 +1,81 @@
 /**
  * Apply Command
  *
- * Apply generated AGENTS.md from .auracoil/generated/ to the repo root.
- * User reviews the draft first, then runs this to commit the change.
+ * Apply review suggestions to AGENTS.md Auracoil region.
+ * Reads from .auracoil/reviews/ instead of .auracoil/generated/.
  */
 
-import { readdir, readFile, writeFile, copyFile } from 'fs/promises';
+import { readdir, readFile, writeFile } from 'fs/promises';
 import { join, basename } from 'path';
 import chalk from 'chalk';
-import { isPointerClaudeMd, writeClaudeMdPointer } from '../generator/claude-md-pointer.js';
+import { extractRegion, replaceRegion, ensureRegion } from '../regions/region-parser.js';
 
 interface ApplyOptions {
-  file?: string;  // Specific file to apply (defaults to latest)
+  file?: string;
 }
 
 export async function applyCommand(options: ApplyOptions): Promise<void> {
   const cwd = process.cwd();
-  const generatedDir = join(cwd, '.auracoil', 'generated');
+  const reviewDir = join(cwd, '.auracoil', 'reviews');
 
   console.log(chalk.cyan('\n  Auracoil Apply\n'));
 
-  // Find the file to apply
-  let sourceFile: string;
+  // Find the review file
+  let reviewFile: string;
 
   if (options.file) {
-    sourceFile = join(generatedDir, options.file);
+    reviewFile = join(reviewDir, options.file);
   } else {
-    // Find latest generated file
     try {
-      const files = await readdir(generatedDir);
-      const agentFiles = files
-        .filter(f => f.startsWith('AGENTS.') && f.endsWith('.md'))
+      const files = await readdir(reviewDir);
+      const reviewFiles = files
+        .filter(f => f.startsWith('review-') && f.endsWith('.json'))
         .sort()
         .reverse();
 
-      if (agentFiles.length === 0) {
-        console.log(chalk.yellow('  No generated files found.'));
-        console.log(chalk.dim('  Run `auracoil generate` first.\n'));
+      if (reviewFiles.length === 0) {
+        console.log(chalk.yellow('  No review files found.'));
+        console.log(chalk.dim('  Run `auracoil review` first.\n'));
         process.exit(1);
       }
 
-      sourceFile = join(generatedDir, agentFiles[0]);
-      console.log(chalk.dim(`  Using latest: ${basename(sourceFile)}`));
+      reviewFile = join(reviewDir, reviewFiles[0]);
+      console.log(chalk.dim(`  Using latest: ${basename(reviewFile)}`));
     } catch {
-      console.log(chalk.yellow('  No .auracoil/generated/ directory found.'));
-      console.log(chalk.dim('  Run `auracoil generate` first.\n'));
+      console.log(chalk.yellow('  No .auracoil/reviews/ directory found.'));
+      console.log(chalk.dim('  Run `auracoil review` first.\n'));
       process.exit(1);
     }
   }
 
-  // Read the generated content
-  let content: string;
+  // Read review content
+  let reviewContent: string;
   try {
-    content = await readFile(sourceFile, 'utf-8');
+    reviewContent = await readFile(reviewFile, 'utf-8');
   } catch {
-    console.log(chalk.red(`  ✗ File not found: ${sourceFile}`));
+    console.log(chalk.red(`  ✗ File not found: ${reviewFile}`));
     process.exit(1);
   }
 
-  // Write to AGENTS.md
-  const destPath = join(cwd, 'AGENTS.md');
-  await writeFile(destPath, content);
-  console.log(chalk.green(`  ✓ Written ${destPath}`));
-
-  // Write CLAUDE.md pointer (only if not custom)
-  const isPointer = await isPointerClaudeMd(cwd);
-  if (isPointer) {
-    await writeClaudeMdPointer(cwd, {});
-  } else {
-    console.log(chalk.dim('  Skipping CLAUDE.md (has custom content)'));
+  // Read current AGENTS.md
+  const agentsPath = join(cwd, 'AGENTS.md');
+  let agentsMd: string;
+  try {
+    agentsMd = await readFile(agentsPath, 'utf-8');
+  } catch {
+    console.log(chalk.yellow('  No AGENTS.md found.'));
+    console.log(chalk.dim('  Run /interdoc first to create one.\n'));
+    process.exit(1);
   }
 
-  console.log(chalk.cyan('\n  Changes applied!\n'));
+  // Ensure Auracoil region exists
+  agentsMd = ensureRegion(agentsMd);
+
+  // For now, save the review content as the region
+  // (In production, the agent parses suggestions and applies selectively)
+  const updatedDoc = replaceRegion(agentsMd, reviewContent);
+  await writeFile(agentsPath, updatedDoc);
+
+  console.log(chalk.green('  ✓ Review applied to AGENTS.md Auracoil region'));
+  console.log(chalk.dim('  Only the Auracoil section was modified.\n'));
 }

@@ -4,7 +4,7 @@
  * Show documentation coverage and staleness metrics.
  */
 
-import { access, readFile, stat } from 'fs/promises';
+import { readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';
 import { glob } from 'glob';
@@ -50,19 +50,6 @@ export async function healthCommand(): Promise<void> {
     console.log(chalk.dim('    Install with: npm i -g @steipete/oracle'));
   }
 
-  // Check initialization
-  const auracoilDir = join(cwd, '.auracoil');
-  let initialized = false;
-  try {
-    await access(join(auracoilDir, 'config.yaml'));
-    initialized = true;
-    console.log(chalk.green('  ✓ Auracoil: Initialized'));
-  } catch {
-    console.log(chalk.yellow('  ⚠ Auracoil: Not initialized'));
-    console.log(chalk.dim('    Run `auracoil init` first\n'));
-    return;
-  }
-
   // Check documentation files
   const metrics = await gatherMetrics(cwd);
 
@@ -101,7 +88,7 @@ export async function healthCommand(): Promise<void> {
   if (metrics.staleness.needsUpdate) {
     console.log(chalk.yellow(`    ⚠ ${metrics.staleness.filesChangedSinceIndex} files changed since last index`));
     console.log(chalk.dim(`      Last indexed: ${formatAge(metrics.staleness.daysStale)} ago`));
-    console.log(chalk.dim('      Run `auracoil update` to refresh'));
+    console.log(chalk.dim('      Run `auracoil review` to refresh'));
   } else {
     console.log(chalk.green('    ✓ Documentation is up to date'));
   }
@@ -109,9 +96,9 @@ export async function healthCommand(): Promise<void> {
   // Summary
   console.log('');
   if (!metrics.hasAgentsMd) {
-    console.log(chalk.cyan('  → Run `auracoil generate` to create AGENTS.md'));
+    console.log(chalk.cyan('  → Run `auracoil review` to create AGENTS.md'));
   } else if (metrics.staleness.needsUpdate) {
-    console.log(chalk.cyan('  → Run `auracoil update` to refresh documentation'));
+    console.log(chalk.cyan('  → Run `auracoil review` to refresh documentation'));
   } else {
     console.log(chalk.green('  All good!'));
   }
