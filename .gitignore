@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Auracoil working data
+.auracoil/cache/
+.auracoil/oracle/
+.auracoil/generated/
+.auracoil/reviews/
