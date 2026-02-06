@@ -1,0 +1,10 @@
+{
+  "name": "auracoil",
+  "version": "0.2.0",
+  "description": "GPT 5.2 Pro reviewer for AGENTS.md — accretive cross-AI documentation enhancement via Oracle",
+  "author": {
+    "name": "MK"
+  },
+  "homepage": "https://github.com/anthropics/auracoil",
+  "license": "MIT"
+}

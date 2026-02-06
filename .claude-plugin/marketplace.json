@@ -1,0 +1,15 @@
+{
+  "name": "auracoil-dev",
+  "description": "Development marketplace for Auracoil",
+  "owner": {
+    "name": "MK"
+  },
+  "plugins": [
+    {
+      "name": "auracoil",
+      "description": "GPT 5.2 Pro reviewer for AGENTS.md",
+      "version": "0.2.0",
+      "source": "./"
+    }
+  ]
+}
