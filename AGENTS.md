@@ -23,15 +23,34 @@ auracoil diff
 # Apply: write approved suggestions into the Auracoil region
 auracoil apply
 
+# Install deps
+npm install
+
 # Build
 npm run build          # tsc -> dist/
 
 # Test
-npx vitest run         # 26 tests across 6 suites
+npx vitest run         # vitest run (one-shot)
+npm run test:run       # vitest run (one-shot, via npm script)
+npm test               # vitest (watch mode)
 
 # Dev
 npm run dev            # tsc --watch
+
+# Lint
+npm run lint           # eslint src/
+
+# Typecheck
+npm run typecheck      # tsc --noEmit
+
+# Start (runs built CLI)
+npm start              # node dist/index.js
 ```
+
+**Useful flags:**
+- `auracoil review --skip-preflight` — bypass Oracle session health check
+- `auracoil diff --file <review.json>` — diff a specific review file
+- `auracoil apply --file <review.json>` — apply a specific review file
 
 ## Architecture
 
@@ -84,6 +103,10 @@ src/
   integrations/
     oracle.ts                  # Oracle CLI wrapper (spawn, parse, health check)
     oracle.test.ts
+
+plugin.json                      # Plugin manifest (declares skills/commands)
+package.json                     # scripts, deps, Node engine requirement
+tsconfig.json                    # TS compiler settings (NodeNext, outDir dist/, strict)
 
 .claude-plugin/
   plugin.json                  # Claude Code plugin metadata
@@ -139,6 +162,7 @@ CHROME_PATH=/usr/local/bin/google-chrome-wrapper
 
 Auracoil is a Claude Code plugin with a skill and a slash command:
 
+- **`plugin.json`**: Plugin manifest — declares exported **skills** and **commands**. Update this when adding/removing `skills/` entries or slash commands.
 - **`.claude-plugin/plugin.json`**: Plugin metadata (name, version, description)
 - **`skills/auracoil/SKILL.md`**: Instructions for when/how Claude should invoke Auracoil (prerequisites, workflow steps, key principles)
 - **`commands/auracoil.md`**: The `/auracoil` slash command definition
@@ -151,3 +175,19 @@ The skill teaches Claude to: check prerequisites, ensure the Auracoil region exi
 - **Oracle session expiry**: If Oracle fails with ECONNREFUSED or Cloudflare challenge, the user must re-authenticate via NoVNC
 - **Region markers required**: `apply` and `diff` commands throw if `<!-- auracoil:begin/end -->` markers are missing from AGENTS.md
 - **Node >= 20 required**: ESM features and module behavior depend on Node 20+
+
+<!-- auracoil:begin -->
+## Auracoil Review Notes
+
+_This section is maintained by Auracoil (GPT 5.2 Pro reviewer). Do not edit manually._
+
+### Status
+
+- **Last review:** 2026-02-06 — 6 suggestions (all approved)
+- **Latest evidence snapshot:** commit `fix: add skills/commands declarations to plugin.json` (changed: `.claude-plugin/plugin.json`, `plugin.json`)
+- **Next action:** run `auracoil review` after next significant code change
+
+### Open findings
+
+_None — all suggestions from 2026-02-06 review applied._
+<!-- auracoil:end -->
